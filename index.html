@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tools Hub - Your Ultimate Directory</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --dark-bg: #0a0a0a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.4;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .bg-orb:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(45deg, #ff006e, #8338ec);
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .bg-orb:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(45deg, #06ffa5, #00d4ff);
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .bg-orb:nth-child(3) {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(45deg, #ffbe0b, #fb5607);
+            bottom: 10%;
+            left: 50%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(120deg); }
+            66% { transform: translateY(10px) rotate(240deg); }
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0 2rem;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .nav-tab:hover, .nav-tab.active {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .auth-btn, .logout-btn {
+            padding: 0.5rem 1rem;
+            background: var(--secondary-gradient);
+            border: none;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .auth-btn:hover, .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 2rem 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, #667eea 50%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.2); }
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Search and Controls */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-container {
+            position: relative;
+            min-width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            color: var(--text-primary);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .add-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background: var(--accent-gradient);
+            border: none;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+        }
+
+        .add-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .add-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Tools Grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .tool-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .tool-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .tool-info {
+            flex: 1;
+        }
+
+        .tool-logo {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .tool-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .tool-category {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--secondary-gradient);
+            color: white;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .tool-description {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .tool-link-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tool-link-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+
+        .modal h2 {
+            margin-bottom: 2rem;
+            text-align: center;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-primary, .btn-secondary {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-primary:hover, .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Auth Modal */
+        .auth-modal {
+            max-width: 400px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 0.25rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-tabs {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .search-container {
+                min-width: 280px;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal {
+                margin: 1rem;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="background-animation">
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🚀 AI Tools Hub</div>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-category="ai-tools">AI Tools</button>
+                <button class="nav-tab" data-category="ui-ux">UI/UX Design</button>
+                <button class="nav-tab" data-category="seo">SEO Tools</button>
+                <button class="nav-tab" data-category="iot-robotics">IoT & Robotics</button>
+                <button class="nav-tab" data-category="out-of-box">Out of the Box</button>
+            </div>
+            
+            <div class="nav-actions">
+                <div id="userInfo" class="user-info hidden">
+                    <span id="userEmail"></span>
+                </div>
+                <button id="authBtn" class="auth-btn">Login</button>
+                <button id="logoutBtn" class="logout-btn hidden">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>Your Ultimate Tools Directory</h1>
+            <p>Discover, organize, and access the best tools across AI, Design, SEO, IoT, and beyond</p>
+        </div>
+
+        <!-- Search and Controls -->
+        <div class="controls">
+            <div class="search-container">
+                <div class="search-icon">🔍</div>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search tools...">
+            </div>
+            <button id="addToolBtn" class="add-btn" disabled>
+                <span>➕</span>
+                Add Tool
+            </button>
+        </div>
+
+        <!-- Tools Grid -->
+        <div id="toolsGrid" class="tools-grid"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state hidden">
+            <div class="empty-state-icon">📦</div>
+            <h3>No tools found</h3>
+            <p>Try adjusting your search or add some tools to get started!</p>
+        </div>
+    </div>
+
+    <!-- Tool Modal -->
+    <div id="toolModal" class="modal-overlay">
+        <div class="modal">
+            <h2 id="toolModalTitle">Add New Tool</h2>
+            <div class="form-group">
+                <label for="toolName">Tool Name *</label>
+                <input type="text" id="toolName" class="form-input" placeholder="e.g., ChatGPT" required>
+            </div>
+            <div class="form-group">
+                <label for="toolDescription">Description *</label>
+                <textarea id="toolDescription" class="form-textarea" placeholder="Brief description of what this tool does..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="toolCategory">Category *</label>
+                <select id="toolCategory" class="form-select" required>
+                    <option value="">Select Category</option>
+                    <option value="ai-tools">AI Tools</option>
+                    <option value="ui-ux">UI/UX Design</option>
+                    <option value="seo">SEO Tools</option>
+                    <option value="iot-robotics">IoT & Robotics</option>
+                    <option value="out-of-box">Out of the Box</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="toolUrl">URL *</label>
+                <input type="url" id="toolUrl" class="form-input" placeholder="https://example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="toolLogo">Logo (Emoji)</label>
+                <input type="text" id="toolLogo" class="form-input" placeholder="🤖" maxlength="2">
+            </div>
+            <div class="form-actions">
+                <button id="saveToolBtn" class="btn-primary">
+                    <span id="saveToolText">Save Tool</span>
+                    <div id="saveToolSpinner" class="loading-spinner hidden"></div>
+                </button>
+                <button id="cancelToolBtn" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal-overlay">
+        <div class="modal auth-modal">
+            <div class="auth-tabs">
+                <button id="loginTab" class="auth-tab active">Login</button>
+                <button id="signupTab" class="auth-tab">Sign Up</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="authEmail">Email *</label>
+                <input type="email" id="authEmail" class="form-input" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="authPassword">Password *</label>
+                <input type="password" id="authPassword" class="form-input" placeholder="••••••••" required>
+            </div>
+            <div class="form-actions">
+                <button id="authSubmitBtn" class="btn-primary">
+                    <span id="authSubmitText">Login</span>
+                    <div id="authSpinner" class="loading-spinner hidden"></div>
+                </button>
+                <button id="cancelAuthBtn" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            // Replace with your Firebase config
+            apiKey: "AIzaSyD7G9l4ooS2fdwgw7wtCbJLu-3y62c-haI",
+            authDomain: "storying-web-app.firebaseapp.com",
+            projectId: "storying-web-app",
+            storageBucket: "storying-web-app.firebasestorage.app",
+            messagingSenderId: "756434780117",
+            appId: "1:756434780117:web:7ac1c71d5311223209875c",
+            measurementId: "G-H6JHKCQS33"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        class AIToolsHub {
+            constructor() {
+                this.currentCategory = 'ai-tools';
+                this.tools = [];
+                this.filteredTools = [];
+                this.searchTerm = '';
+                this.editingTool = null;
+                this.isAuthMode = 'login';
+                this.user = null;
+
+                this.initializeElements();
+                this.bindEvents();
+                this.setupAuthListener();
+                this.loadCategoryData();
+            }
+
+            initializeElements() {
+                // Navigation
+                this.navTabs = document.querySelectorAll('.nav-tab');
+                this.authBtn = document.getElementById('authBtn');
+                this.logoutBtn = document.getElementById('logoutBtn');
+                this.userInfo = document.getElementById('userInfo');
+                this.userEmail = document.getElementById('userEmail');
+
+                // Controls
+                this.searchInput = document.getElementById('searchInput');
+                this.addToolBtn = document.getElementById('addToolBtn');
+
+                // Grid and Empty State
+                this.toolsGrid = document.getElementById('toolsGrid');
+                this.emptyState = document.getElementById('emptyState');
+
+                // Tool Modal
+                this.toolModal = document.getElementById('toolModal');
+                this.toolModalTitle = document.getElementById('toolModalTitle');
+                this.toolName = document.getElementById('toolName');
+                this.toolDescription = document.getElementById('toolDescription');
+                this.toolCategory = document.getElementById('toolCategory');
+                this.toolUrl = document.getElementById('toolUrl');
+                this.toolLogo = document.getElementById('toolLogo');
+                this.saveToolBtn = document.getElementById('saveToolBtn');
+                this.saveToolText = document.getElementById('saveToolText');
+                this.saveToolSpinner = document.getElementById('saveToolSpinner');
+                this.cancelToolBtn = document.getElementById('cancelToolBtn');
+
+                // Auth Modal
+                this.authModal = document.getElementById('authModal');
+                this.loginTab = document.getElementById('loginTab');
+                this.signupTab = document.getElementById('signupTab');
+                this.authEmail = document.getElementById('authEmail');
+                this.authPassword = document.getElementById('authPassword');
+                this.authSubmitBtn = document.getElementById('authSubmitBtn');
+                this.authSubmitText = document.getElementById('authSubmitText');
+                this.authSpinner = document.getElementById('authSpinner');
+                this.cancelAuthBtn = document.getElementById('cancelAuthBtn');
+            }
+
+            bindEvents() {
+                // Navigation
+                this.navTabs.forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        this.switchCategory(e.target.dataset.category);
+                    });
+                });
+
+                this.authBtn.addEventListener('click', () => this.showAuthModal());
+                this.logoutBtn.addEventListener('click', () => this.logout());
+
+                // Search
+                this.searchInput.addEventListener('input', (e) => {
+                    this.searchTerm = e.target.value.toLowerCase();
+                    this.filterTools();
+                });
+
+                // Add Tool
+                this.addToolBtn.addEventListener('click', () => this.showToolModal());
+
+                // Tool Modal
+                this.saveToolBtn.addEventListener('click', () => this.saveTool());
+                this.cancelToolBtn.addEventListener('click', () => this.hideToolModal());
+
+                // Auth Modal
+                this.loginTab.addEventListener('click', () => this.switchAuthMode('login'));
+                this.signupTab.addEventListener('click', () => this.switchAuthMode('signup'));
+                this.authSubmitBtn.addEventListener('click', () => this.handleAuth());
+                this.cancelAuthBtn.addEventListener('click', () => this.hideAuthModal());
+
+                // Modal Overlays
+                this.toolModal.addEventListener('click', (e) => {
+                    if (e.target === this.toolModal) this.hideToolModal();
+                });
+
+                this.authModal.addEventListener('click', (e) => {
+                    if (e.target === this.authModal) this.hideAuthModal();
+                });
+
+                // Enter key for auth
+                this.authPassword.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.handleAuth();
+                });
+            }
+
+            setupAuthListener() {
+                auth.onAuthStateChanged((user) => {
+                    this.user = user;
+                    this.updateAuthUI();
+                    if (user) {
+                        this.loadCategoryData();
+                    }
+                });
+            }
+
+            updateAuthUI() {
+                if (this.user) {
+                    this.authBtn.classList.add('hidden');
+                    this.logoutBtn.classList.remove('hidden');
+                    this.userInfo.classList.remove('hidden');
+                    this.userEmail.textContent = this.user.email;
+                    this.addToolBtn.disabled = false;
+                } else {
+                    this.authBtn.classList.remove('hidden');
+                    this.logoutBtn.classList.add('hidden');
+                    this.userInfo.classList.add('hidden');
+                    this.addToolBtn.disabled = true;
+                }
+            }
+
+            switchCategory(category) {
+                this.currentCategory = category;
+                this.navTabs.forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.category === category);
+                });
+                this.loadCategoryData();
+            }
+
+            async loadCategoryData() {
+                try {
+                    if (!this.user) {
+                        // Load demo data for guests
+                        this.tools = this.getDemoData();
+                        this.filterTools();
+                        return;
+                    }
+
+                    const snapshot = await db.collection('tools')
+                        .where('userId', '==', this.user.uid)
+                        .where('category', '==', this.currentCategory)
+                        .orderBy('createdAt', 'desc')
+                        .get();
+
+                    this.tools = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+
+                    this.filterTools();
+                } catch (error) {
+                    console.error('Error loading tools:', error);
+                    this.showMessage('Error loading tools. Please try again.', 'error');
+                }
+            }
+
+            getDemoData() {
+                const demoData = {
+                    'ai-tools': [
+                        {
+                            id: 'demo1',
+                            name: 'Claude',
+                            description: 'Advanced AI assistant for writing, analysis, and coding',
+                            category: 'ai-tools',
+                            url: 'https://claude.ai',
+                            logo: '🤖'
+                        },
+                        {
+                            id: 'demo2',
+                            name: 'Perplexity',
+                            description: 'AI-powered search and research assistant',
+                            category: 'ai-tools',
+                            url: 'https://perplexity.ai',
+                            logo: '🔍'
+                        }
+                    ],
+                    'ui-ux': [
+                        {
+                            id: 'demo3',
+                            name: 'Figma',
+                            description: 'Collaborative interface design tool',
+                            category: 'ui-ux',
+                            url: 'https://figma.com',
+                            logo: '🎨'
+                        }
+                    ],
+                    'seo': [
+                        {
+                            id: 'demo4',
+                            name: 'SEMrush',
+                            description: 'All-in-one SEO and marketing toolkit',
+                            category: 'seo',
+                            url: 'https://semrush.com',
+                            logo: '📊'
+                        }
+                    ],
+                    'iot-robotics': [
+                        {
+                            id: 'demo5',
+                            name: 'Arduino IDE',
+                            description: 'Integrated development environment for Arduino',
+                            category: 'iot-robotics',
+                            url: 'https://arduino.cc',
+                            logo: '🔧'
+                        }
+                    ],
+                    'out-of-box': [
+                        {
+                            id: 'demo6',
+                            name: 'Wolfram Alpha',
+                            description: 'Computational knowledge engine',
+                            category: 'out-of-box',
+                            url: 'https://wolframalpha.com',
+                            logo: '🧮'
+                        }
+                    ]
+            }
+        }
+
+            filterTools() {
+                this.filteredTools = this.tools.filter(tool => {
+                    const matchesSearch = tool.name.toLowerCase().includes(this.searchTerm) ||
+                                         tool.description.toLowerCase().includes(this.searchTerm);
+                    return matchesSearch;
+                });
+                this.renderTools();
+            }
+
+            renderTools() {
+                if (this.filteredTools.length === 0) {
+                    this.toolsGrid.classList.add('hidden');
+                    this.emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                this.toolsGrid.classList.remove('hidden');
+                this.emptyState.classList.add('hidden');
+                this.toolsGrid.innerHTML = '';
+
+                this.filteredTools.forEach((tool, index) => {
+                    const toolCard = this.createToolCard(tool, index);
+                    this.toolsGrid.appendChild(toolCard);
+                });
+            }
+
+            createToolCard(tool, index) {
+                const card = document.createElement('div');
+                card.className = 'tool-card';
+                card.style.animationDelay = `${index * 0.1}s`;
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="tool-info">
+                            <span class="tool-logo">${tool.logo || '🔧'}</span>
+                            <h3 class="tool-name">${tool.name}</h3>
+                            <span class="tool-category">${this.getCategoryDisplayName(tool.category)}</span>
+                        </div>
+                        <div class="card-actions">
+                            ${this.user ? `
+                                <button class="action-btn" onclick="app.editTool('${tool.id}')" title="Edit">
+                                    ✏️
+                                </button>
+                                <button class="action-btn" onclick="app.deleteTool('${tool.id}')" title="Delete">
+                                    🗑️
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <p class="tool-description">${tool.description}</p>
+                    <button class="tool-link-btn" onclick="app.openTool('${tool.url}')">
+                        <span>🚀</span>
+                        Open Tool
+                    </button>
+                `;
+
+                return card;
+            }
+
+            getCategoryDisplayName(category) {
+                const names = {
+                    'ai-tools': 'AI Tools',
+                    'ui-ux': 'UI/UX Design',
+                    'seo': 'SEO Tools',
+                    'iot-robotics': 'IoT & Robotics',
+                    'out-of-box': 'Out of the Box'
+                };
+                return names[category] || category;
+            }
+
+            openTool(url) {
+                window.open(url, '_blank');
+            }
+
+            async editTool(toolId) {
+                const tool = this.tools.find(t => t.id === toolId);
+                if (!tool) return;
+
+                this.editingTool = tool;
+                this.toolModalTitle.textContent = 'Edit Tool';
+                this.toolName.value = tool.name;
+                this.toolDescription.value = tool.description;
+                this.toolCategory.value = tool.category;
+                this.toolUrl.value = tool.url;
+                this.toolLogo.value = tool.logo || '';
+                this.saveToolText.textContent = 'Update Tool';
+                this.showToolModal();
+            }
+
+            async deleteTool(toolId) {
+                if (!confirm('Are you sure you want to delete this tool?')) return;
+
+                try {
+                    await db.collection('tools').doc(toolId).delete();
+                    this.tools = this.tools.filter(t => t.id !== toolId);
+                    this.filterTools();
+                    this.showMessage('Tool deleted successfully!', 'success');
+                } catch (error) {
+                    console.error('Error deleting tool:', error);
+                    this.showMessage('Error deleting tool. Please try again.', 'error');
+                }
+            }
+
+            showToolModal() {
+                if (!this.editingTool) {
+                    this.toolModalTitle.textContent = 'Add New Tool';
+                    this.toolCategory.value = this.currentCategory;
+                    this.toolLogo.value = '🔧';
+                    this.saveToolText.textContent = 'Save Tool';
+                }
+                this.toolModal.classList.add('show');
+                this.toolName.focus();
+            }
+
+            hideToolModal() {
+                this.toolModal.classList.remove('show');
+                this.clearToolForm();
+                this.editingTool = null;
+            }
+
+            clearToolForm() {
+                this.toolName.value = '';
+                this.toolDescription.value = '';
+                this.toolCategory.value = '';
+                this.toolUrl.value = '';
+                this.toolLogo.value = '';
+            }
+
+            async saveTool() {
+                const formData = {
+                    name: this.toolName.value.trim(),
+                    description: this.toolDescription.value.trim(),
+                    category: this.toolCategory.value,
+                    url: this.toolUrl.value.trim(),
+                    logo: this.toolLogo.value.trim() || '🔧'
+                };
+
+                // Validation
+                if (!formData.name || !formData.description || !formData.category || !formData.url) {
+                    this.showMessage('Please fill in all required fields', 'error');
+                    return;
+                }
+
+                // URL validation
+                try {
+                    new URL(formData.url);
+                } catch {
+                    this.showMessage('Please enter a valid URL', 'error');
+                    return;
+                }
+
+                this.setLoading(true);
+
+                try {
+                    if (this.editingTool) {
+                        // Update existing tool
+                        await db.collection('tools').doc(this.editingTool.id).update({
+                            ...formData,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        const index = this.tools.findIndex(t => t.id === this.editingTool.id);
+                        if (index !== -1) {
+                            this.tools[index] = { ...this.tools[index], ...formData };
+                        }
+                        
+                        this.showMessage('Tool updated successfully!', 'success');
+                    } else {
+                        // Add new tool
+                        const docRef = await db.collection('tools').add({
+                            ...formData,
+                            userId: this.user.uid,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        const newTool = { id: docRef.id, ...formData };
+                        if (formData.category === this.currentCategory) {
+                            this.tools.unshift(newTool);
+                        }
+                        
+                        this.showMessage('Tool added successfully!', 'success');
+                    }
+
+                    this.hideToolModal();
+                    this.filterTools();
+                } catch (error) {
+                    console.error('Error saving tool:', error);
+                    this.showMessage('Error saving tool. Please try again.', 'error');
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+
+            setLoading(isLoading) {
+                if (isLoading) {
+                    this.saveToolText.textContent = '';
+                    this.saveToolSpinner.classList.remove('hidden');
+                    this.saveToolBtn.disabled = true;
+                } else {
+                    this.saveToolText.textContent = this.editingTool ? 'Update Tool' : 'Save Tool';
+                    this.saveToolSpinner.classList.add('hidden');
+                    this.saveToolBtn.disabled = false;
+                }
+            }
+
+            // Auth Methods
+            showAuthModal() {
+                this.authModal.classList.add('show');
+                this.authEmail.focus();
+            }
+
+            hideAuthModal() {
+                this.authModal.classList.remove('show');
+                this.clearAuthForm();
+            }
+
+            clearAuthForm() {
+                this.authEmail.value = '';
+                this.authPassword.value = '';
+            }
+
+            switchAuthMode(mode) {
+                this.isAuthMode = mode;
+                this.loginTab.classList.toggle('active', mode === 'login');
+                this.signupTab.classList.toggle('active', mode === 'signup');
+                this.authSubmitText.textContent = mode === 'login' ? 'Login' : 'Sign Up';
+            }
+
+            async handleAuth() {
+                const email = this.authEmail.value.trim();
+                const password = this.authPassword.value;
+
+                if (!email || !password) {
+                    this.showMessage('Please fill in all fields', 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    this.showMessage('Password must be at least 6 characters', 'error');
+                    return;
+                }
+
+                this.setAuthLoading(true);
+
+                try {
+                    if (this.isAuthMode === 'login') {
+                        await auth.signInWithEmailAndPassword(email, password);
+                        this.showMessage('Welcome back!', 'success');
+                    } else {
+                        await auth.createUserWithEmailAndPassword(email, password);
+                        this.showMessage('Account created successfully!', 'success');
+                    }
+                    this.hideAuthModal();
+                } catch (error) {
+                    console.error('Auth error:', error);
+                    this.showMessage(this.getAuthErrorMessage(error.code), 'error');
+                } finally {
+                    this.setAuthLoading(false);
+                }
+            }
+
+            setAuthLoading(isLoading) {
+                if (isLoading) {
+                    this.authSubmitText.textContent = '';
+                    this.authSpinner.classList.remove('hidden');
+                    this.authSubmitBtn.disabled = true;
+                } else {
+                    this.authSubmitText.textContent = this.isAuthMode === 'login' ? 'Login' : 'Sign Up';
+                    this.authSpinner.classList.add('hidden');
+                    this.authSubmitBtn.disabled = false;
+                }
+            }
+
+            getAuthErrorMessage(errorCode) {
+                const messages = {
+                    'auth/user-not-found': 'No account found with this email',
+                    'auth/wrong-password': 'Incorrect password',
+                    'auth/email-already-in-use': 'Email is already registered',
+                    'auth/weak-password': 'Password is too weak',
+                    'auth/invalid-email': 'Invalid email address',
+                    'auth/too-many-requests': 'Too many attempts. Please try again later'
+                };
+                return messages[errorCode] || 'An error occurred. Please try again.';
+            }
+
+            async logout() {
+                try {
+                    await auth.signOut();
+                    this.tools = [];
+                    this.filteredTools = [];
+                    this.loadCategoryData();
+                    this.showMessage('Logged out successfully', 'success');
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    this.showMessage('Error logging out', 'error');
+                }
+            }
+
+            showMessage(message, type = 'info') {
+                // Create toast notification
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.textContent = message;
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 100px;
+                    right: 2rem;
+                    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                    color: white;
+                    padding: 1rem 2rem;
+                    border-radius: 10px;
+                    z-index: 3000;
+                    animation: slideInRight 0.3s ease-out;
+                    box-shadow: var(--shadow);
+                `;
+
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.animation = 'slideOutRight 0.3s ease-out forwards';
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the app
+        const app = new AIToolsHub();
+
+        // Add toast animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
